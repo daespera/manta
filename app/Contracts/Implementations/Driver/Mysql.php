@@ -182,6 +182,88 @@ class Mysql extends DriverContract
 
 	}
 
+	public function delete()
+    {
+
+    	if(empty($this->operation_definition['identby'])) {
+			$this->raiseError('No identifier definition found for Mysql driver');
+			return;
+		}
+
+		$identifier = $this->operation_definition['identby'];
+        foreach($identifier as $key=>$value) {
+            $where = $key;
+            $url_param = $value;
+        }
+
+        $criteria = \Request::get($url_param);
+
+        if(empty($this->data_map['records'])) {
+			$this->raiseError('No record definition found for Mysql driver');
+			return;
+		}
+
+		$records = $this->data_map['records'];
+
+		foreach($records as $data)
+		{
+
+			$table = $data['table'];
+
+			# Delete from a flat table
+			if(!isset($data['pivot'])) {
+				
+				$condition = [];
+				$condition[$where] = $criteria;
+
+				try {
+
+					$obj = \DB::table($table)->where($condition)->first();
+	            	$this->lastAffected = $obj;
+
+	                # Delete entry
+                    \DB::table($table)->where($condition)->delete();
+
+                    $this->addResult($table, $condition);
+                    
+                }
+				catch (Exception $e)
+				{
+					$this->raiseError('Mysql delete failed');
+					return;
+				}
+
+			}
+			# Delete from a pivot table
+			else {
+
+				# Determine inherit key
+				$inherit = $data['pivot']['inherit'];
+
+				foreach($inherit as $inheritKey => $pivotKey) {}
+				$condition = [];
+				$condition[$pivotKey] = $this->lastAffected->$inheritKey;
+
+				try {
+
+					# Delete entry
+	                \DB::table($table)->where($condition)->delete();
+
+	                $this->addResult($table, $condition);
+
+	            }
+				catch (Exception $e)
+				{
+					$this->raiseError('Mysql delete failed');
+					return;
+				}
+
+			}
+
+		}
+        
+    }
+
 	public function flagIfSyncSource($storage, $obj)
     {
 

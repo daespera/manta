@@ -26,6 +26,14 @@ return [
         'identby'   => ['id'=>'id'],
         'drivers' => ['mysql', 'elastic']
 
+    ],
+
+    'delete' => [
+
+        'operation' => 'delete',
+        'identby'   => ['id'=>'id'],
+        'drivers' => ['mysql', 'elastic']
+
     ]
 
 ];

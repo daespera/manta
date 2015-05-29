@@ -130,6 +130,72 @@ class Elastic extends DriverContract
 
     }
 
+    public function delete()
+    {
+
+        if(empty($this->operation_definition['identby'])) {
+            $this->raiseError('No identifier definition found for Elastic driver');
+            return;
+        }
+
+        $identifier = $this->operation_definition['identby'];
+        foreach($identifier as $key=>$value) {
+            $where = $key;
+            $url_param = $value;
+        }
+
+        $criteria = \Request::get($url_param);
+
+        if(empty($this->data_map['records'])) {
+            $this->raiseError('No record definition found for Elastic driver');
+            return;
+        }
+
+        $records = $this->data_map['records'];
+
+        foreach($records as $data)
+        {
+
+            $index = $data['index'];
+            $type = $data['type'];
+
+            try {
+
+                # Retrieve elastic _id
+                $params = [];
+                $params['index'] = $index;
+                $params['type'] = $type;
+                $params['body']['query']['filtered']['query']['bool']['must']['match'][$where] = $criteria;
+                $result = $this->client->search($params);
+
+                if(!empty($result['hits']['hits'][0])) {
+
+                    $_id = $result['hits']['hits'][0]['_id'];
+
+                    # Delete data in elastic
+                    $this->client->delete([
+                         'index' => $index,
+                         'type'  => $type,
+                         'refresh' => true,
+                         'id'    => $_id
+                    ]);
+
+                    # Add result
+                    $this->addResult($index.'/'.$type, ['_id'=>$_id]);
+
+                }       
+
+            }
+            catch (Exception $e)
+            {
+                $this->raiseError('Elastic delete failed');
+                return;
+            }
+
+        }
+
+    }
+
 	public function flagIfSyncSource($storage, $obj)
     {
 

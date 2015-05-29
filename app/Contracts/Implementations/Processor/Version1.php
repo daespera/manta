@@ -1,4 +1,4 @@
-4<?php namespace App\Contracts\Implementations\Processor;
+<?php namespace App\Contracts\Implementations\Processor;
 
 use App\Contracts\ProcessorContract;
 
